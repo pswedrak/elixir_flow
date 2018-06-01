@@ -4,17 +4,17 @@ defmodule Mandelbrot do
     line = hd(String.split(line, "\n"))
     [x_s, y_s] = String.split(line, " ")
     {px, py} = {String.to_integer(x_s), String.to_integer(y_s)}
-    hx = 3.5/200
-    hy = 2/150
+    hx = 3.5/800
+    hy = 2/600
     x0 = px * hx - 2.5
     y0 = py * hy - 1
     x = 0.0
     y = 0.0
     iter = 0
-    max_iter = 1000
+    max_iter = 100
 
     color = mandelbrotIter(x, y, x0, y0, iter, max_iter)
-    Integer.to_string(px) <> " " <> Integer.to_string(py) <> " " <> Integer.to_string(color) <> "\r\n"
+    Integer.to_string(px) <> "," <> Integer.to_string(py) <> "," <> Integer.to_string(color) <> "\r\n"
   end
 
   def mandelbrotIter(x, y, _, _, iter, max_iter) when iter < max_iter and x*x + y*y > 2*2 do
@@ -29,7 +29,7 @@ defmodule Mandelbrot do
     mandelbrotIter(x*x - y*y + x0, 2*x*y + y0, x0, y0, iter+1, max_iter)
   end
 
-  def mandelbrot(points) do
+  def mandelbrot_parallel(points) do
     to_save = File.stream!(points, [], :line)
     |> Flow.from_enumerable()
     |> Flow.partition()
@@ -37,7 +37,22 @@ defmodule Mandelbrot do
     |> Enum.into([])
     |> List.to_string()
 
-     File.write!("results.txt", to_save)
+     File.write!("results_parallel.csv", to_save)
     end
+
+    def mandelbrot(points) do
+      to_save = File.read!(points)
+      |> String.split("\r\n")
+      |> Enum.map(fn line -> mandelbrotPixel(line) end)
+
+      File.write!("results.csv", to_save)
+  end
+
+    def test(points) do
+      flow_time = fn -> mandelbrot_parallel(points) end |> :timer.tc |> elem(0)
+      time = fn -> mandelbrot(points) end |> :timer.tc |> elem(0)
+      {flow_time / 1000000, time / 1000000}
+  end
+
 end
 
