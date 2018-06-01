@@ -1,11 +1,11 @@
 defmodule Mandelbrot do
 
-  def mandelbrotPixel(line) do
+  def mandelbrotPixel(line, xf, yf) do
     line = hd(String.split(line, "\n"))
     [x_s, y_s] = String.split(line, " ")
     {px, py} = {String.to_integer(x_s), String.to_integer(y_s)}
-    hx = 3.5/800
-    hy = 2/600
+    hx = 3.5/xf
+    hy = 2/yf
     x0 = px * hx - 2.5
     y0 = py * hy - 1
     x = 0.0
@@ -29,28 +29,27 @@ defmodule Mandelbrot do
     mandelbrotIter(x*x - y*y + x0, 2*x*y + y0, x0, y0, iter+1, max_iter)
   end
 
-  def mandelbrot_parallel(points) do
+  def mandelbrot_parallel(points, xf, yf) do
     to_save = File.stream!(points, [], :line)
     |> Flow.from_enumerable()
     |> Flow.partition()
-    |> Flow.reduce(fn -> [] end, fn line, acc -> [mandelbrotPixel(line)] ++ acc end)
+    |> Flow.reduce(fn -> [] end, fn line, acc -> [mandelbrotPixel(line, xf, yf)] ++ acc end)
     |> Enum.into([])
-    |> List.to_string()
-
+    
      File.write!("results_parallel.csv", to_save)
     end
 
-    def mandelbrot(points) do
+    def mandelbrot(points, xf, yf) do
       to_save = File.read!(points)
       |> String.split("\r\n")
-      |> Enum.map(fn line -> mandelbrotPixel(line) end)
+      |> Enum.map(fn line -> mandelbrotPixel(line, xf, yf) end)
 
-      File.write!("results.csv", to_save)
+     File.write!("results.csv", to_save)
   end
 
-    def test(points) do
-      flow_time = fn -> mandelbrot_parallel(points) end |> :timer.tc |> elem(0)
-      time = fn -> mandelbrot(points) end |> :timer.tc |> elem(0)
+    def test(points, xf, yf) do
+      flow_time = fn -> mandelbrot_parallel(points, xf, yf) end |> :timer.tc |> elem(0)
+      time = fn -> mandelbrot(points, xf, yf) end |> :timer.tc |> elem(0)
       {flow_time / 1000000, time / 1000000}
   end
 
