@@ -53,5 +53,19 @@ defmodule Mandelbrot do
       {flow_time / 1000000, time / 1000000}
   end
 
+  def testTimeN(points, xf, yf, n) do
+    testTimer(points, xf, yf, n, {0, 0, n})
+  end
+
+  def testTimer(points, xf, yf, n, {par, seq, m}) do
+    case n do
+      0 -> {par / 1000000, seq / 1000000}
+      _ ->
+        parallelTime = fn -> mandelbrot_parallel(points, xf, yf) end |> :timer.tc |> elem(0)
+        seqTime = fn -> mandelbrot(points, xf, yf) end |> :timer.tc |> elem(0)
+        testTimer(points, xf, yf, n-1, {par + parallelTime / m, seq + seqTime / m, m})
+    end
+  end
+
 end
 

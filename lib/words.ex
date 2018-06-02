@@ -22,7 +22,7 @@ defmodule Words do
 		testTimer(name, n, {0, 0, n})
 	end
 	
-	defp testTimer(name, n, {par, seq, m}) do
+	def testTimer(name, n, {par, seq, m}) do
     case n do
       0 -> {par / 1000000, seq / 1000000}
       _ ->
