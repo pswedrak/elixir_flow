@@ -32,7 +32,6 @@ defmodule Mandelbrot do
   def mandelbrot_parallel(points, xf, yf) do
     to_save = File.stream!(points, [], :line)
     |> Flow.from_enumerable()
-    |> Flow.partition()
     |> Flow.reduce(fn -> [] end, fn line, acc -> [mandelbrotPixel(line, xf, yf)] ++ acc end)
     |> Enum.into([])
     
